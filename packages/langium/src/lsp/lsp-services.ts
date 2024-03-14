@@ -27,6 +27,7 @@ import type { ImplementationProvider } from './implementation-provider.js';
 import type { InlayHintProvider } from './inlay-hint-provider.js';
 import type { LanguageServer } from './language-server.js';
 import type { NodeKindProvider } from './node-kind-provider.js';
+import type { PullDiagnosticProvider } from './pull-diagnostic-provider.js';
 import type { ReferencesProvider } from './references-provider.js';
 import type { RenameProvider } from './rename-provider.js';
 import type { SemanticTokenProvider } from './semantic-token-provider.js';
@@ -51,6 +52,7 @@ export type LangiumSharedServices = LangiumSharedCoreServices & LangiumSharedLSP
 export type LangiumLSPServices = {
     lsp: {
         CompletionProvider?: CompletionProvider
+        PullDiagnosticProvider?: PullDiagnosticProvider
         DocumentHighlightProvider?: DocumentHighlightProvider
         DocumentSymbolProvider?: DocumentSymbolProvider
         HoverProvider?: HoverProvider

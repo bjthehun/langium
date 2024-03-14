@@ -23,6 +23,7 @@ import { DefaultNodeKindProvider } from './node-kind-provider.js';
 import { DefaultReferencesProvider } from './references-provider.js';
 import { DefaultRenameProvider } from './rename-provider.js';
 import { DefaultWorkspaceSymbolProvider } from './workspace-symbol-provider.js';
+import { DefaultPullDiagnosticProvider } from './pull-diagnostic-provider.js';
 
 /**
  * Context required for creating the default language-specific dependency injection module.
@@ -51,6 +52,7 @@ export function createDefaultLSPModule(context: DefaultModuleContext): Module<La
         lsp: {
             CompletionProvider: (services) => new DefaultCompletionProvider(services),
             DocumentSymbolProvider: (services) => new DefaultDocumentSymbolProvider(services),
+            PullDiagnosticProvider: (services) => new DefaultPullDiagnosticProvider(services),
             HoverProvider: (services) => new MultilineCommentHoverProvider(services),
             FoldingRangeProvider: (services) => new DefaultFoldingRangeProvider(services),
             ReferencesProvider: (services) => new DefaultReferencesProvider(services),
