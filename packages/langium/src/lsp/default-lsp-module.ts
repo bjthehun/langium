@@ -52,7 +52,6 @@ export function createDefaultLSPModule(context: DefaultModuleContext): Module<La
         lsp: {
             CompletionProvider: (services) => new DefaultCompletionProvider(services),
             DocumentSymbolProvider: (services) => new DefaultDocumentSymbolProvider(services),
-            PullDiagnosticProvider: (services) => new DefaultPullDiagnosticProvider(services),
             HoverProvider: (services) => new MultilineCommentHoverProvider(services),
             FoldingRangeProvider: (services) => new DefaultFoldingRangeProvider(services),
             ReferencesProvider: (services) => new DefaultReferencesProvider(services),
@@ -92,6 +91,7 @@ export function createDefaultSharedLSPModule(context: DefaultSharedModuleContext
             Connection: () => context.connection,
             LanguageServer: (services) => new DefaultLanguageServer(services),
             DocumentUpdateHandler: (services) => new DefaultDocumentUpdateHandler(services),
+            PullDiagnosticProvider: (services) => new DefaultPullDiagnosticProvider(services),
             WorkspaceSymbolProvider: (services) => new DefaultWorkspaceSymbolProvider(services),
             NodeKindProvider: () => new DefaultNodeKindProvider(),
             FuzzyMatcher: () => new DefaultFuzzyMatcher(),

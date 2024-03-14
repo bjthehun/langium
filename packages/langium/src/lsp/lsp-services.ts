@@ -52,7 +52,6 @@ export type LangiumSharedServices = LangiumSharedCoreServices & LangiumSharedLSP
 export type LangiumLSPServices = {
     lsp: {
         CompletionProvider?: CompletionProvider
-        PullDiagnosticProvider?: PullDiagnosticProvider
         DocumentHighlightProvider?: DocumentHighlightProvider
         DocumentSymbolProvider?: DocumentSymbolProvider
         HoverProvider?: HoverProvider
@@ -88,6 +87,7 @@ export type LangiumSharedLSPServices = {
         FuzzyMatcher: FuzzyMatcher
         LanguageServer: LanguageServer
         NodeKindProvider: NodeKindProvider
+        PullDiagnosticProvider?: PullDiagnosticProvider
         WorkspaceSymbolProvider?: WorkspaceSymbolProvider
     },
     workspace: {
