@@ -225,12 +225,13 @@ function buildUnorderedGroup(ctx: RuleContext, group: UnorderedGroup): Method {
                 const key = idFunc(orIdx, parser);
                 if (!parser.unorderedGroups.get(key)) {
                     // init after clear state
-                    parser.unorderedGroups.set(key, []);
+                    parser.unorderedGroups.set(key, {howMany: 0, which: []});
                 }
                 const groupState = parser.unorderedGroups.get(key)!;
-                if (typeof groupState?.[idx] === 'undefined') {
+                if (typeof groupState?.which[idx] === 'undefined') {
                     // Not accessed yet
-                    groupState[idx] = true;
+                    groupState.which[idx] = true;
+                    groupState.howMany++;
                 }
             }
         };
@@ -240,13 +241,27 @@ function buildUnorderedGroup(ctx: RuleContext, group: UnorderedGroup): Method {
         } else {
             alt.GATE = () => {
                 const trackedAlternatives = parser.unorderedGroups.get(idFunc(orIdx, parser));
-                const allow = !trackedAlternatives?.[idx];
+                const allow = !trackedAlternatives?.which[idx];
                 return allow;
             };
         }
         return alt;
     }));
-    const wrapped = wrap(ctx, getGuardCondition(group), alternatives, '*');
+
+    const allElementsParsedGate: Predicate = (_args) => {
+        const parser = ctx.parser;
+        const groupState = parser.unorderedGroups.get(idFunc(orIdx, parser));
+        return groupState === undefined || (groupState.howMany < group.elements.length);
+    };
+    const groupPredicate: Predicate =
+        getGuardCondition(group) !== undefined ? buildPredicate(getGuardCondition(group)!) : (_args) => true;
+
+    const idx = ctx.many++;
+    const wrapped = (wrappedArgs: Args) => ctx.parser.many(idx, {
+        DEF: () => alternatives(wrappedArgs),
+        GATE: () => allElementsParsedGate(wrappedArgs) && groupPredicate(wrappedArgs)
+    });
+
     return (args) => {
         wrapped(args);
         if (!ctx.parser.isRecording()) {

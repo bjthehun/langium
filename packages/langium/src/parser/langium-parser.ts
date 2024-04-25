@@ -51,6 +51,11 @@ interface AssignmentElement {
     isCrossRef: boolean
 }
 
+interface UnorderedGroupState {
+    howMany: number
+    which: boolean[]
+}
+
 export interface BaseParser {
     rule(rule: ParserRule, impl: RuleImpl): RuleResult;
     alternatives(idx: number, choices: Array<IOrAlt<any>>): void;
@@ -62,7 +67,7 @@ export interface BaseParser {
     action($type: string, action: Action): void;
     construct(): unknown;
     isRecording(): boolean;
-    get unorderedGroups(): Map<string, boolean[]>;
+    get unorderedGroups(): Map<string, UnorderedGroupState>;
     getRuleStack(): number[];
 }
 
@@ -73,7 +78,7 @@ export abstract class AbstractLangiumParser implements BaseParser {
 
     protected readonly lexer: Lexer;
     protected readonly wrapper: ChevrotainWrapper;
-    protected _unorderedGroups: Map<string, boolean[]> = new Map<string, boolean[]>();
+    protected _unorderedGroups: Map<string, UnorderedGroupState> = new Map<string, UnorderedGroupState>();
 
     constructor(services: LangiumCoreServices) {
         this.lexer = services.parser.Lexer;
@@ -110,7 +115,7 @@ export abstract class AbstractLangiumParser implements BaseParser {
         return this.wrapper.IS_RECORDING;
     }
 
-    get unorderedGroups(): Map<string, boolean[]> {
+    get unorderedGroups(): Map<string, UnorderedGroupState> {
         return this._unorderedGroups;
     }
 

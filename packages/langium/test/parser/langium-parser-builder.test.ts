@@ -158,38 +158,6 @@ describe('Predicated groups', () => {
 
 });
 
-describe('Unordered Group Test 2', () => {
-    // Simplifed problematic grammar of https://github.com/eclipse-langium/langium/issues/1180
-    const grammar1180 = `
-    grammar Bug1180
-
-    entry L: (persons+=P)*;
-    P returns string: 'p' & '1';
-
-    hidden terminal WS: /\\s+/;
-    `;
-
-    const program1180 = `
-    1 p p 1
-    p1
-    1pp11p
-    1p p1 p 1 1p
-    `;
-
-    test('Succeeds in parsing 1p and p1 sequences', async () => {
-        const parser1180 = await parserFromGrammar(grammar1180);
-        expect(parser1180.definitionErrors).to.be.empty;
-        const sequences = parseAndCheck(program1180, parser1180) as { persons?: string[] };
-
-        expect(sequences!).to.have.length(10);
-        for (const case1 of [0, 3, 5, 6, 9]) {
-            expect(sequences.persons![case1]).to.equal('1p');
-        }
-        for (const case2 of [1, 2, 4, 7, 8]) {
-            expect(sequences.persons![case2]).to.equal('p1');
-        }
-    });
-});
 
 describe('Handle unordered group', () => {
 
@@ -286,7 +254,39 @@ describe('Handle unordered group', () => {
         expect(lib.books).not.toBeUndefined();
         expect(lib.books?.length).toBe(2);
     });
+});
 
+describe('Unordered groups without dividiers', () => {
+    // Simplifed problematic grammar of https://github.com/eclipse-langium/langium/issues/1180
+    const grammar1180Variant = `
+    grammar Bug1180
+
+    entry L: (persons+=P)*;
+    P returns string: 'p' & '1';
+
+    hidden terminal WS: /\\s+/;
+    `;
+
+    const program1180Variant = `
+    1 p p 1
+    p1
+    1pp11p
+    1p p1 p 1 1p
+    `;
+
+    test('Succeeds in parsing 1p and p1 sequences', async () => {
+        const parser1180 = await parserFromGrammar(grammar1180Variant);
+        expect(parser1180.definitionErrors).to.be.empty;
+        const sequences = parseAndCheck(program1180Variant, parser1180) as { persons?: string[] };
+
+        expect(sequences!.persons).to.have.length(10);
+        for (const case1 of [0, 3, 5, 6, 9]) {
+            expect(sequences.persons![case1]).to.equal('1p');
+        }
+        for (const case2 of [1, 2, 4, 7, 8]) {
+            expect(sequences.persons![case2]).to.equal('p1');
+        }
+    });
 });
 
 function parseAndCheck(model: string, parser: LangiumParser): AstNode {
