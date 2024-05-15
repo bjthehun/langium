@@ -58,6 +58,7 @@ interface UnorderedGroupState {
 
 export interface BaseParser {
     rule(rule: ParserRule, impl: RuleImpl): RuleResult;
+    getRule(name: string): RuleResult | undefined;
     alternatives(idx: number, choices: Array<IOrAlt<any>>): void;
     optional(idx: number, callback: DSLMethodOpts<unknown>): void;
     many(idx: number, callback: DSLMethodOpts<unknown>): void;
@@ -79,6 +80,9 @@ export abstract class AbstractLangiumParser implements BaseParser {
     protected readonly lexer: Lexer;
     protected readonly wrapper: ChevrotainWrapper;
     protected _unorderedGroups: Map<string, UnorderedGroupState> = new Map<string, UnorderedGroupState>();
+
+    protected allRules = new Map<string, RuleResult>();
+    protected mainRule!: RuleResult;
 
     constructor(services: LangiumCoreServices) {
         this.lexer = services.parser.Lexer;
@@ -111,6 +115,10 @@ export abstract class AbstractLangiumParser implements BaseParser {
     abstract action($type: string, action: Action): void;
     abstract construct(): unknown;
 
+    getRule(name: string): RuleResult | undefined {
+        return this.allRules.get(name);
+    }
+
     isRecording(): boolean {
         return this.wrapper.IS_RECORDING;
     }
@@ -128,13 +136,16 @@ export abstract class AbstractLangiumParser implements BaseParser {
     }
 }
 
+export interface ParserOptions {
+    rule?: string
+}
+
 export class LangiumParser extends AbstractLangiumParser {
     private readonly linker: Linker;
     private readonly converter: ValueConverter;
     private readonly astReflection: AstReflection;
     private readonly nodeBuilder = new CstNodeBuilder();
     private stack: any[] = [];
-    private mainRule!: RuleResult;
     private assignmentMap = new Map<AbstractElement, AssignmentElement | undefined>();
 
     private get current(): any {
@@ -151,17 +162,22 @@ export class LangiumParser extends AbstractLangiumParser {
     rule(rule: ParserRule, impl: RuleImpl): RuleResult {
         const type = rule.fragment ? undefined : isDataTypeRule(rule) ? DatatypeSymbol : getTypeName(rule);
         const ruleMethod = this.wrapper.DEFINE_RULE(withRuleSuffix(rule.name), this.startImplementation(type, impl).bind(this));
+        this.allRules.set(rule.name, ruleMethod);
         if (rule.entry) {
             this.mainRule = ruleMethod;
         }
         return ruleMethod;
     }
 
-    parse<T extends AstNode = AstNode>(input: string): ParseResult<T> {
+    parse<T extends AstNode = AstNode>(input: string, options: ParserOptions = {}): ParseResult<T> {
         this.nodeBuilder.buildRootNode(input);
         const lexerResult = this.lexer.tokenize(input);
         this.wrapper.input = lexerResult.tokens;
-        const result = this.mainRule.call(this.wrapper, {});
+        const ruleMethod = options.rule ? this.allRules.get(options.rule) : this.mainRule;
+        if (!ruleMethod) {
+            throw new Error(options.rule ? `No rule found with name '${options.rule}'` : 'No main rule available.');
+        }
+        const result = ruleMethod.call(this.wrapper, {});
         this.nodeBuilder.addHiddenTokens(lexerResult.hidden);
         this.unorderedGroups.clear();
         return {
@@ -429,7 +445,6 @@ export interface CompletionParserResult {
 }
 
 export class LangiumCompletionParser extends AbstractLangiumParser {
-    private mainRule!: RuleResult;
     private tokens: IToken[] = [];
 
     private elementStack: AbstractElement[] = [];
@@ -462,6 +477,7 @@ export class LangiumCompletionParser extends AbstractLangiumParser {
 
     rule(rule: ParserRule, impl: RuleImpl): RuleResult {
         const ruleMethod = this.wrapper.DEFINE_RULE(withRuleSuffix(rule.name), this.startImplementation(impl).bind(this));
+        this.allRules.set(rule.name, ruleMethod);
         if (rule.entry) {
             this.mainRule = ruleMethod;
         }
